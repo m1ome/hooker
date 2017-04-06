@@ -1,7 +1,7 @@
 # Hooker
-![Hooker](http://s4.pikabu.ru/post_img/2015/01/26/1/1422226538_2049899097.png)
-
 > Tool for easy s3 sftp file management
+
+![Hooker](http://s4.pikabu.ru/post_img/2015/01/26/1/1422226538_2049899097.png)
 
 ## Installation
 ```bash
