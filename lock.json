@@ -1,0 +1,39 @@
+{
+    "memo": "",
+    "projects": [
+        {
+            "name": "github.com/tdewolff/buffer",
+            "branch": "master",
+            "revision": "df6253e2a2cda5aba1b5d0c59fc5bdf0a98ae192",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/tdewolff/minify",
+            "branch": "master",
+            "revision": "689c26d0e5d5d708395a09d5e77c15fc58a7e9ec",
+            "packages": [
+                ".",
+                "xml"
+            ]
+        },
+        {
+            "name": "github.com/tdewolff/parse",
+            "branch": "master",
+            "revision": "f5b417179f975c1c22d14d0d99505bf1e5ef28f3",
+            "packages": [
+                ".",
+                "xml"
+            ]
+        },
+        {
+            "name": "github.com/tdewolff/strconv",
+            "branch": "master",
+            "revision": "3e8091f4417ebaaa3910da63a45ea394ebbfb0e3",
+            "packages": [
+                "."
+            ]
+        }
+    ]
+}

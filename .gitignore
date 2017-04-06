@@ -24,3 +24,7 @@ _testmain.go
 *.prof
 
 .idea
+.DS_Store
+hooker
+example
+!example/.gitkeep
