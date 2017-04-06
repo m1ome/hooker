@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"errors"
@@ -30,11 +31,13 @@ func main() {
 
 	interval := flag.Int("interval", 60, "Time in seconds to sleep between checks")
 	dir := flag.String("dir", cwd, "Directory we should look for a new files")
+	out := flag.String("out", cwd, "Directory we should place zip files into")
 	pattern := flag.String("pattern", ".xml", "Pattern we look files in directory")
 	verbose = flag.Bool("v", false, "Verbose output")
 	checkInterval = flag.Int("check", 180, "Interval in seconds of file check")
 	url := flag.String("url", "http://localhost:3000/", "URL of reports API")
 	token := flag.String("token", "", "Auth token for API")
+	zipFile := flag.Bool("zip", true, "Zip file")
 	clear := flag.Bool("clear", true, "Clear file after send")
 	flag.Parse()
 
@@ -48,9 +51,11 @@ func main() {
 	fmt.Printf("  Interval:\t%d seconds\n", *interval)
 	fmt.Printf("  Size Check:\t%d minutes\n", *checkInterval)
 	fmt.Printf("  Directory:\t%s\n", *dir)
+	fmt.Printf("  Zip dir:\t%s\n", *out)
 	fmt.Printf("  Pattern:\t%s\n", *pattern)
 	fmt.Printf("  URL:\t\t%s, Token:%s\n", *url, *token)
 	fmt.Printf("  Clear:\t%t\n", *clear)
+	fmt.Printf("  Zip:\t\t%t\n", *zipFile)
 	fmt.Printf("  Verbose:\t%t\n", *verbose)
 	fmt.Println("====================================================================")
 
@@ -107,10 +112,26 @@ func main() {
 
 				log.Println("Successfully send data to API")
 
+				// Zipping file
+				if *zipFile {
+					zipname := path.Join(*out, file.Name()+".zip")
+
+					err := zipit(file.Name(), zipname, buf)
+					if err != nil {
+						log.Fatalf("[Error] Zipping file: %s", err)
+					}
+
+					log.Printf("Zipped file to: %s", zipname)
+				}
+
 				// Deleting file
-				err = os.Remove(filePath)
-				if err != nil {
-					log.Fatalf("[Error] deleting file: %s\n", err)
+				if *clear || *zipFile {
+					err = os.Remove(filePath)
+					if err != nil {
+						log.Fatalf("[Error] deleting file: %s\n", err)
+					}
+
+					log.Printf("Deleted file %s", filePath)
 				}
 			}
 		}
@@ -144,7 +165,7 @@ func uploaded(filePath string) error {
 
 		if *verbose {
 			log.Printf("File %s size is %d bytes", filePath, tmp)
-			log.Printf("Next file size check in %d minutes\n", *checkInterval)
+			log.Printf("Next file size check in %d seconds\n", *checkInterval)
 		}
 
 		size = tmp
@@ -175,6 +196,29 @@ func send(url, token string, info []byte, filename string) error {
 	}
 
 	return errors.New("Unable to send data to API")
+}
+
+func zipit(file, output string, data []byte) error {
+	zipfile, err := os.Create(output)
+	if err != nil {
+		return err
+	}
+	defer zipfile.Close()
+
+	archive := zip.NewWriter(zipfile)
+	defer archive.Close()
+
+	f, err := archive.Create(file)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func post(url, token string, data []byte, filename string) error {

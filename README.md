@@ -10,7 +10,6 @@ go get github.com/m1ome/hooker
 
 ## Usage
 ```bash
-➔ hooker --help
 Usage of hooker:
   -check int
     	Interval in seconds of file check (default 180)
@@ -20,6 +19,8 @@ Usage of hooker:
     	Directory we should look for a new files (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
   -interval int
     	Time in seconds to sleep between checks (default 60)
+  -out string
+    	Directory we should place zip files into (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
   -pattern string
     	Pattern we look files in directory (default ".xml")
   -token string
@@ -27,6 +28,8 @@ Usage of hooker:
   -url string
     	URL of reports API (default "http://localhost:3000/")
   -v	Verbose output
+  -zip
+    	Zip file (default true)
 ```
 
 ## Request
