@@ -18,10 +18,12 @@ import (
 
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
+	"net"
 )
 
 var verbose *bool
 var checkInterval *int
+var timeout *int
 
 func main() {
 	cwd, err := os.Getwd()
@@ -33,6 +35,7 @@ func main() {
 	dir := flag.String("dir", cwd, "Directory we should look for a new files")
 	out := flag.String("out", cwd, "Directory we should place zip files into")
 	pattern := flag.String("pattern", ".xml", "Pattern we look files in directory")
+	timeout = flag.Int("timeout", 180, "Timeout waiting request from API")
 	verbose = flag.Bool("v", false, "Verbose output")
 	checkInterval = flag.Int("check", 180, "Interval in seconds of file check")
 	url := flag.String("url", "http://localhost:3000/", "URL of reports API")
@@ -49,6 +52,7 @@ func main() {
 	fmt.Println("====================================================================")
 	fmt.Println("Configuration:")
 	fmt.Printf("  Interval:\t%d seconds\n", *interval)
+	fmt.Printf("  Timeout:\t%d seconds\n", *timeout)
 	fmt.Printf("  Size Check:\t%d minutes\n", *checkInterval)
 	fmt.Printf("  Directory:\t%s\n", *dir)
 	fmt.Printf("  Zip dir:\t%s\n", *out)
@@ -255,7 +259,17 @@ func post(url, token string, data []byte, filename string) error {
 	req.Header.Set("X-File-Name", filename)
 	req.Header.Set("Content-Encoding", "gzip")
 
-	client := &http.Client{}
+	tout := time.Second * time.Duration(*timeout)
+	transport := http.Transport{
+		Dial: func(network, addr string) (net.Conn, error) {
+			return net.DialTimeout(network, addr, tout)
+		},
+	}
+
+	client := http.Client{
+		Transport: &transport,
+	}
+
 	response, err := client.Do(req)
 	if response != nil {
 		defer response.Body.Close()

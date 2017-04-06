@@ -23,6 +23,8 @@ Usage of hooker:
     	Directory we should place zip files into (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
   -pattern string
     	Pattern we look files in directory (default ".xml")
+  -timeout int
+    	Timeout waiting request from API (default 180)
   -token string
     	Auth token for API
   -url string
