@@ -222,22 +222,6 @@ func zipit(file, output string, data []byte) error {
 }
 
 func post(url, token string, data []byte, filename string) error {
-	var header []byte
-	var t string
-	if len(data) < 200 {
-		header = data[:]
-	} else {
-		header = data[0:200]
-	}
-
-	if bytes.Contains(header, []byte(`<Transactions>`)) {
-		t = "transactions"
-	} else if bytes.Contains(header, []byte(`<SCHEME ID="GPS">`)) {
-		t = "cards"
-	} else {
-		return errors.New("Unknown type on request")
-	}
-
 	// Minification
 	m := minify.New()
 	m.AddFunc("xml", xml.Minify)
@@ -249,8 +233,6 @@ func post(url, token string, data []byte, filename string) error {
 
 	var buf bytes.Buffer
 	gz := gzip.NewWriter(&buf)
-	gz.Name = filename
-	gz.Comment = t
 	n, err := gz.Write(minified)
 	if err != nil {
 		return err
@@ -270,6 +252,7 @@ func post(url, token string, data []byte, filename string) error {
 	}
 
 	req.Header.Set("X-Access-Token", token)
+	req.Header.Set("X-File-Name", filename)
 	req.Header.Set("Content-Encoding", "gzip")
 
 	client := &http.Client{}

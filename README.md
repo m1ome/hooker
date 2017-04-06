@@ -32,9 +32,13 @@ Usage of hooker:
     	Zip file (default true)
 ```
 
-## Request
+## Request [POST]
 
-Request is gzipped data, containing:
-* **Name** - filename
-* **Comment** - type of file
-Inside of gzip XML minified data contained
+**Body:** gzipped data
+
+**Headers:**
+```
+X-Access-Token: <TOKEN_HERE>
+X-File-Name: GPS-CPSbalexp20170325.xml
+Content-Encoding: gzip
+```
