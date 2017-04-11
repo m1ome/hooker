@@ -1,29 +1,14 @@
 package main
 
 import (
-	"archive/zip"
-	"bytes"
-	"compress/gzip"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
-	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
-
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/xml"
-	"net"
 )
-
-var verbose *bool
-var checkInterval *int
-var timeout *int
 
 func main() {
 	cwd, err := os.Getwd()
@@ -34,10 +19,10 @@ func main() {
 	interval := flag.Int("interval", 60, "Time in seconds to sleep between checks")
 	dir := flag.String("dir", cwd, "Directory we should look for a new files")
 	out := flag.String("out", cwd, "Directory we should place zip files into")
-	pattern := flag.String("pattern", ".xml", "Pattern we look files in directory")
-	timeout = flag.Int("timeout", 180, "Timeout waiting request from API")
-	verbose = flag.Bool("v", false, "Verbose output")
-	checkInterval = flag.Int("check", 180, "Interval in seconds of file check")
+	patterns := flag.String("patterns", ".xml, .xlsx", "Patterns we look files in directory")
+	timeout := flag.Int("timeout", 180, "Timeout waiting request from API")
+	verbose := flag.Bool("v", false, "Verbose output")
+	checkInterval := flag.Int("check", 180, "Interval in seconds of file check")
 	url := flag.String("url", "http://localhost:3000/", "URL of reports API")
 	token := flag.String("token", "", "Auth token for API")
 	zipFile := flag.Bool("zip", true, "Zip file")
@@ -45,243 +30,83 @@ func main() {
 	flag.Parse()
 
 	// Printing header
-	for _, s := range strings.Split(art, "\n") {
-		fmt.Println(s)
+	fmt.Println(art)
+
+	// Setting options
+	opts := options{
+		interval:      *interval,
+		dir:           *dir,
+		out:           *out,
+		patterns:      *patterns,
+		timeout:       *timeout,
+		verbose:       *verbose,
+		checkInterval: *checkInterval,
+		url:           *url,
+		token:         *token,
+		zip:           *zipFile,
+		clear:         *clear,
 	}
 
 	fmt.Println("====================================================================")
 	fmt.Println("Configuration:")
-	fmt.Printf("  Interval:\t%d seconds\n", *interval)
-	fmt.Printf("  Timeout:\t%d seconds\n", *timeout)
-	fmt.Printf("  Size Check:\t%d minutes\n", *checkInterval)
-	fmt.Printf("  Directory:\t%s\n", *dir)
-	fmt.Printf("  Zip dir:\t%s\n", *out)
-	fmt.Printf("  Pattern:\t%s\n", *pattern)
-	fmt.Printf("  URL:\t\t%s, Token:%s\n", *url, *token)
-	fmt.Printf("  Clear:\t%t\n", *clear)
-	fmt.Printf("  Zip:\t\t%t\n", *zipFile)
-	fmt.Printf("  Verbose:\t%t\n", *verbose)
+	fmt.Printf("  Interval:\t%d seconds\n", opts.interval)
+	fmt.Printf("  Timeout:\t%d seconds\n", opts.timeout)
+	fmt.Printf("  Size Check:\t%d minutes\n", opts.checkInterval)
+	fmt.Printf("  Directory:\t%s\n", opts.dir)
+	fmt.Printf("  Zip dir:\t%s\n", opts.out)
+	fmt.Printf("  Patterns:\t%s\n", opts.patterns)
+	fmt.Printf("  URL:\t\t%s, Token:%s\n", opts.url, opts.token)
+	fmt.Printf("  Clear:\t%t\n", opts.clear)
+	fmt.Printf("  Zip:\t\t%t\n", opts.zip)
+	fmt.Printf("  Verbose:\t%t\n", opts.verbose)
 	fmt.Println("====================================================================")
 
+	c := newController(opts)
 	for {
-		if *verbose {
+		if opts.verbose {
 			log.Println("Scanning directory for a new files")
 		}
 
-		files, err := ioutil.ReadDir(*dir)
+		files, err := ioutil.ReadDir(opts.dir)
 		if err != nil {
 			log.Fatalf("Directory traverse error: %s\n", err)
 		}
 
 		if len(files) > 0 {
 			for _, file := range files {
-				filePath := path.Join(*dir, file.Name())
-
 				// Skip if this is directory
 				if file.IsDir() {
-					if *verbose {
-						log.Printf("Path %s is directory skipping\n", filePath)
+					if opts.verbose {
+						log.Printf("Path %s is directory skipping\n", file.Name())
 					}
 
 					continue
 				}
 
 				// Skip if file has wrong suffix
-				if !strings.HasSuffix(filePath, *pattern) {
-					if *verbose {
-						log.Printf("File %s is not accepted by system\n", filePath)
+				goodFile := false
+				for _, suffix := range strings.Split(opts.patterns, ",") {
+					if strings.HasSuffix(file.Name(), strings.TrimSpace(suffix)) {
+						goodFile = true
+						break
 					}
+				}
 
+				if !goodFile {
+					if opts.verbose {
+						log.Printf("File %s is not accepted by system\n", file.Name())
+					}
 					continue
 				}
 
-				log.Printf("Found new file %s\n", filePath)
-
-				// Checking that file have good size
-				err = uploaded(filePath)
-				if err != nil {
-					log.Fatalf("File size checking error: %s\n", err)
-				}
-
-				// Sending stuff and deleting file
-				buf, err := ioutil.ReadFile(filePath)
-				if err != nil {
-					log.Fatalf("Reading file error: %s\n", err)
-				}
-
-				err = send(*url, *token, buf, file.Name())
-				if err != nil {
-					log.Fatalf("[Error] sending to API: %s\n", err)
-				}
-
-				log.Println("Successfully send data to API")
-
-				// Zipping file
-				if *zipFile {
-					zipname := path.Join(*out, file.Name()+".zip")
-
-					err := zipit(file.Name(), zipname, buf)
-					if err != nil {
-						log.Fatalf("[Error] Zipping file: %s", err)
-					}
-
-					log.Printf("Zipped file to: %s", zipname)
-				}
-
-				// Deleting file
-				if *clear || *zipFile {
-					err = os.Remove(filePath)
-					if err != nil {
-						log.Fatalf("[Error] deleting file: %s\n", err)
-					}
-
-					log.Printf("Deleted file %s", filePath)
-				}
+				c.spawn(file)
 			}
 		}
 
-		if *verbose {
-			log.Printf("Sleeping for a %d sec\n", *interval)
+		if opts.verbose {
+			log.Printf("Sleeping for a %d sec\n", opts.interval)
 		}
 
-		time.Sleep(time.Second * time.Duration(*interval))
+		time.Sleep(time.Second * time.Duration(opts.interval))
 	}
-}
-
-func uploaded(filePath string) error {
-	var size int64
-
-	for {
-		file, err := os.Open(filePath)
-		if err != nil {
-			return err
-		}
-
-		info, err := file.Stat()
-		if err != nil {
-			return err
-		}
-
-		tmp := info.Size()
-		if tmp == size {
-			return nil
-		}
-
-		if *verbose {
-			log.Printf("File %s size is %d bytes", filePath, tmp)
-			log.Printf("Next file size check in %d seconds\n", *checkInterval)
-		}
-
-		size = tmp
-		time.Sleep(time.Second * time.Duration(*checkInterval))
-	}
-}
-
-func send(url, token string, info []byte, filename string) error {
-	backoff := 0
-
-	for {
-		log.Printf("Sending data to API %d try\n", backoff+1)
-
-		err := post(url, token, info, filename)
-		if err == nil {
-			return nil
-		}
-
-		backoff++
-		mul := math.Pow(2, float64(backoff)) // 2 4 16 32 64
-		log.Printf("[Error] sending to API: %s", err)
-		if backoff > 5 {
-			break
-		}
-
-		log.Printf("Backoff for %d mins\n", int64(mul))
-		time.Sleep(time.Minute * time.Duration(mul))
-	}
-
-	return errors.New("Unable to send data to API")
-}
-
-func zipit(file, output string, data []byte) error {
-	zipfile, err := os.Create(output)
-	if err != nil {
-		return err
-	}
-	defer zipfile.Close()
-
-	archive := zip.NewWriter(zipfile)
-	defer archive.Close()
-
-	f, err := archive.Create(file)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func post(url, token string, data []byte, filename string) error {
-	// Minification
-	m := minify.New()
-	m.AddFunc("xml", xml.Minify)
-
-	minified, err := m.Bytes("xml", data)
-	if err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	gz := gzip.NewWriter(&buf)
-	n, err := gz.Write(minified)
-	if err != nil {
-		return err
-	}
-	if n == 0 {
-		return errors.New("Written 0 bytes")
-	}
-	gz.Close()
-
-	req, err := http.NewRequest("POST", url, &buf)
-	if req != nil {
-		defer req.Body.Close()
-	}
-
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("X-Access-Token", token)
-	req.Header.Set("X-File-Name", filename)
-	req.Header.Set("Content-Encoding", "gzip")
-
-	tout := time.Second * time.Duration(*timeout)
-	transport := http.Transport{
-		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, tout)
-		},
-	}
-
-	client := http.Client{
-		Transport: &transport,
-	}
-
-	response, err := client.Do(req)
-	if response != nil {
-		defer response.Body.Close()
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("Http status: %d", response.StatusCode)
-	}
-
-	return nil
 }

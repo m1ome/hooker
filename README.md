@@ -21,8 +21,8 @@ Usage of hooker:
     	Time in seconds to sleep between checks (default 60)
   -out string
     	Directory we should place zip files into (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
-  -pattern string
-    	Pattern we look files in directory (default ".xml")
+  -patterns string
+    	Patterns we look files in directory (default ".xml, .xlsx")
   -timeout int
     	Timeout waiting request from API (default 180)
   -token string
