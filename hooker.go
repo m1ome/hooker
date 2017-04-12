@@ -47,6 +47,10 @@ func main() {
 		clear:         *clear,
 	}
 
+	if opts.token == "" {
+		fmt.Println("** WARNING: You providen empty token! **")
+	}
+
 	fmt.Println("====================================================================")
 	fmt.Println("Configuration:")
 	fmt.Printf("  Interval:\t%d seconds\n", opts.interval)
