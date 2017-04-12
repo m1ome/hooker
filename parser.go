@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"archive/zip"
+	x "encoding/xml"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
 )
@@ -40,7 +41,7 @@ func (p *parser) parse() {
 		p.ch <- struct{}{}
 	}()
 	filePath := path.Join(p.options.dir, p.file.Name())
-	log.Printf("[FILE: %s] Found new file %s\n", p.prefix, filePath)
+	log.Printf("[FILE: %s] Found new file, start processing %s\n", p.prefix, filePath)
 
 	// Checking that file have good size
 	err := p.finishedUpload(filePath)
@@ -85,31 +86,24 @@ func (p *parser) parse() {
 }
 
 func (p *parser) finishedUpload(filePath string) error {
-	var size int64
+	m := struct{}{}
 
 	for {
-		file, err := os.Open(filePath)
+		buf, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
 
-		info, err := file.Stat()
+		err = x.Unmarshal(buf, &m)
 		if err != nil {
-			return err
-		}
+			if p.options.verbose {
+				log.Printf("[FILE: %s] Error parsing XML: %s\n", p.prefix, err)
+			}
 
-		tmp := info.Size()
-		if tmp == size {
+			time.Sleep(time.Second * time.Duration(p.options.checkInterval))
+		} else {
 			return nil
 		}
-
-		if p.options.verbose {
-			log.Printf("[FILE: %s] File %s size is %d bytes\n", p.prefix, filePath, tmp)
-			log.Printf("[FILE: %s] Next file size check in %d seconds\n", p.prefix, p.options.checkInterval)
-		}
-
-		size = tmp
-		time.Sleep(time.Second * time.Duration(p.options.checkInterval))
 	}
 }
 
