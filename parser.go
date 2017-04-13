@@ -1,8 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	x "encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -14,8 +16,6 @@ import (
 	"path"
 	"time"
 
-	"archive/zip"
-	x "encoding/xml"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
 )
@@ -86,12 +86,52 @@ func (p *parser) parse() {
 }
 
 func (p *parser) finishedUpload(filePath string) error {
-	m := struct{}{}
+	// Waiting for a size stop changing
+	// We should wait before file size will be stable
+	// And then parse it with XML and validate
+	var t int64
+	for {
+		file, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
 
+		fi, err := file.Stat()
+		if err != nil {
+			return err
+		}
+
+		if p.options.verbose {
+			log.Printf("[FILE: %s] Size is %d bytes\n", p.prefix, fi.Size())
+		}
+
+		if t != fi.Size() {
+			t = fi.Size()
+			time.Sleep(15 * time.Second)
+			continue
+		}
+
+		if p.options.verbose {
+			log.Printf("[FILE: %s] Size is stabilized, parsing XML\n", p.prefix)
+		}
+
+		break
+	}
+
+	m := struct{}{}
 	for {
 		buf, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return err
+		}
+
+		if len(buf) < 50 {
+			if p.options.verbose {
+				log.Printf("[FILE: %s] File is too small, skipping it for now, size: %d\n", p.prefix, len(buf))
+			}
+
+			time.Sleep(time.Second * time.Duration(p.options.checkInterval))
+			continue
 		}
 
 		err = x.Unmarshal(buf, &m)
