@@ -90,12 +90,15 @@ func (p *parser) finishedUpload(filePath string) error {
 	// We should wait before file size will be stable
 	// And then parse it with XML and validate
 	var t int64
-	for {
-		file, err := os.Open(filePath)
-		if err != nil {
-			return err
-		}
 
+	file, err := os.Open(filePath)
+	defer file.Close()
+
+	if err != nil {
+		return err
+	}
+
+	for {
 		fi, err := file.Stat()
 		if err != nil {
 			return err
