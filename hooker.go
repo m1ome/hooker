@@ -19,7 +19,8 @@ func main() {
 	interval := flag.Int("interval", 60, "Time in seconds to sleep between checks")
 	dir := flag.String("dir", cwd, "Directory we should look for a new files")
 	out := flag.String("out", cwd, "Directory we should place zip files into")
-	patterns := flag.String("patterns", ".xml, .xlsx", "Patterns we look files in directory")
+	separator := flag.String("sep", ",", "Pattern separator")
+	patterns := flag.String("patterns", ".xml; .xlsx", fmt.Sprintf("Patterns we look files in directory (seperated by: %s)", *separator))
 	timeout := flag.Int("timeout", 180, "Timeout waiting request from API")
 	verbose := flag.Bool("v", false, "Verbose output")
 	checkInterval := flag.Int("check", 180, "Interval in seconds of file check")
@@ -45,6 +46,7 @@ func main() {
 		token:         *token,
 		zip:           *zipFile,
 		clear:         *clear,
+		separator:     *separator,
 	}
 
 	if opts.token == "" {
@@ -58,7 +60,7 @@ func main() {
 	fmt.Printf("  XML Check:\t%d seconds\n", opts.checkInterval)
 	fmt.Printf("  Directory:\t%s\n", opts.dir)
 	fmt.Printf("  Zip dir:\t%s\n", opts.out)
-	fmt.Printf("  Patterns:\t%s\n", opts.patterns)
+	fmt.Printf("  Patterns:\t%s (separator: %s)\n", opts.patterns, opts.separator)
 	fmt.Printf("  URL:\t\t%s, Token:%s\n", opts.url, opts.token)
 	fmt.Printf("  Clear:\t%t\n", opts.clear)
 	fmt.Printf("  Zip:\t\t%t\n", opts.zip)
@@ -89,7 +91,7 @@ func main() {
 
 				// Skip if file has wrong suffix
 				goodFile := false
-				for _, suffix := range strings.Split(opts.patterns, ",") {
+				for _, suffix := range strings.Split(opts.patterns, opts.separator) {
 					if strings.HasSuffix(file.Name(), strings.TrimSpace(suffix)) {
 						goodFile = true
 						break

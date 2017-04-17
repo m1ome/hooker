@@ -16,13 +16,15 @@ Usage of hooker:
   -clear
         Clear file after send (default true)
   -dir string
-        Directory we should look for a new files (default current working dir)
+        Directory we should look for a new files (default "(CWD)")
   -interval int
         Time in seconds to sleep between checks (default 60)
   -out string
-        Directory we should place zip files into (default current working dir)
+        Directory we should place zip files into (default "(CWD)")
   -patterns string
-        Patterns we look files in directory (default ".xml, .xlsx")
+        Patterns we look files in directory (seperated by: ,) (default ".xml; .xlsx")
+  -sep string
+        Pattern separator (default ",")
   -timeout int
         Timeout waiting request from API (default 180)
   -token string

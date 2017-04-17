@@ -12,4 +12,5 @@ type options struct {
 	token         string
 	zip           bool
 	clear         bool
+	separator     string
 }
