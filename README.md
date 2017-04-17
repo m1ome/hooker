@@ -12,26 +12,26 @@ go get github.com/m1ome/hooker
 ```bash
 Usage of hooker:
   -check int
-    	Interval in seconds of file check (default 180)
+        Interval in seconds of file check (default 180)
   -clear
-    	Clear file after send (default true)
+        Clear file after send (default true)
   -dir string
-    	Directory we should look for a new files (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
+        Directory we should look for a new files (default current working dir)
   -interval int
-    	Time in seconds to sleep between checks (default 60)
+        Time in seconds to sleep between checks (default 60)
   -out string
-    	Directory we should place zip files into (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
+        Directory we should place zip files into (default current working dir)
   -patterns string
-    	Patterns we look files in directory (default ".xml, .xlsx")
+        Patterns we look files in directory (default ".xml, .xlsx")
   -timeout int
-    	Timeout waiting request from API (default 180)
+        Timeout waiting request from API (default 180)
   -token string
-    	Auth token for API
+        Auth token for API
   -url string
-    	URL of reports API (default "http://localhost:3000/")
-  -v	Verbose output
+        URL of reports API (default "http://localhost:3000/")
+  -v    Verbose output
   -zip
-    	Zip file (default true)
+        Zip file (default true)
 ```
 
 ## Request [POST]

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	x "encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -14,7 +16,6 @@ import (
 	"path"
 	"time"
 
-	"archive/zip"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
 )
@@ -40,7 +41,7 @@ func (p *parser) parse() {
 		p.ch <- struct{}{}
 	}()
 	filePath := path.Join(p.options.dir, p.file.Name())
-	log.Printf("[FILE: %s] Found new file %s\n", p.prefix, filePath)
+	log.Printf("[FILE: %s] Found new file, start processing %s\n", p.prefix, filePath)
 
 	// Checking that file have good size
 	err := p.finishedUpload(filePath)
@@ -85,31 +86,64 @@ func (p *parser) parse() {
 }
 
 func (p *parser) finishedUpload(filePath string) error {
-	var size int64
-
+	// Waiting for a size stop changing
+	// We should wait before file size will be stable
+	// And then parse it with XML and validate
+	var t int64
 	for {
 		file, err := os.Open(filePath)
 		if err != nil {
 			return err
 		}
 
-		info, err := file.Stat()
+		fi, err := file.Stat()
 		if err != nil {
 			return err
 		}
 
-		tmp := info.Size()
-		if tmp == size {
-			return nil
+		if p.options.verbose {
+			log.Printf("[FILE: %s] Size is %d bytes\n", p.prefix, fi.Size())
+		}
+
+		if t != fi.Size() {
+			t = fi.Size()
+			time.Sleep(15 * time.Second)
+			continue
 		}
 
 		if p.options.verbose {
-			log.Printf("[FILE: %s] File %s size is %d bytes\n", p.prefix, filePath, tmp)
-			log.Printf("[FILE: %s] Next file size check in %d seconds\n", p.prefix, p.options.checkInterval)
+			log.Printf("[FILE: %s] Size is stabilized, parsing XML\n", p.prefix)
 		}
 
-		size = tmp
-		time.Sleep(time.Second * time.Duration(p.options.checkInterval))
+		break
+	}
+
+	m := struct{}{}
+	for {
+		buf, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return err
+		}
+
+		if len(buf) < 50 {
+			if p.options.verbose {
+				log.Printf("[FILE: %s] File is too small, skipping it for now, size: %d\n", p.prefix, len(buf))
+			}
+
+			time.Sleep(time.Second * time.Duration(p.options.checkInterval))
+			continue
+		}
+
+		err = x.Unmarshal(buf, &m)
+		if err != nil {
+			if p.options.verbose {
+				log.Printf("[FILE: %s] Error parsing XML: %s\n", p.prefix, err)
+			}
+
+			time.Sleep(time.Second * time.Duration(p.options.checkInterval))
+		} else {
+			return nil
+		}
 	}
 }
 

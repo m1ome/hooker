@@ -47,11 +47,15 @@ func main() {
 		clear:         *clear,
 	}
 
+	if opts.token == "" {
+		fmt.Println("** WARNING: You providen empty token! **")
+	}
+
 	fmt.Println("====================================================================")
 	fmt.Println("Configuration:")
 	fmt.Printf("  Interval:\t%d seconds\n", opts.interval)
 	fmt.Printf("  Timeout:\t%d seconds\n", opts.timeout)
-	fmt.Printf("  Size Check:\t%d minutes\n", opts.checkInterval)
+	fmt.Printf("  XML Check:\t%d seconds\n", opts.checkInterval)
 	fmt.Printf("  Directory:\t%s\n", opts.dir)
 	fmt.Printf("  Zip dir:\t%s\n", opts.out)
 	fmt.Printf("  Patterns:\t%s\n", opts.patterns)
