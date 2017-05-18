@@ -1,10 +1,26 @@
 {
-    "memo": "",
+    "memo": "2a3af045292e587ec032a038139364b0c4ee78b648db3859e8f8978c03497074",
     "projects": [
         {
-            "name": "github.com/tdewolff/buffer",
+            "name": "github.com/certifi/gocertifi",
+            "version": "2017.04.17",
+            "revision": "a9c833d2837d3b16888d55d5aafa9ffe9afb22b0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/getsentry/raven-go",
             "branch": "master",
-            "revision": "df6253e2a2cda5aba1b5d0c59fc5bdf0a98ae192",
+            "revision": "5c07ee42021d8df0718f06bc7ea6b17123a44f9c",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/tdewolff/buffer",
+            "version": "v1.0.0",
+            "revision": "43cef5ba7b6ce99cc410632dad46cf1c6c97026e",
             "packages": [
                 "."
             ]
@@ -12,7 +28,7 @@
         {
             "name": "github.com/tdewolff/minify",
             "branch": "master",
-            "revision": "689c26d0e5d5d708395a09d5e77c15fc58a7e9ec",
+            "revision": "6d70711b499d8eec542902d2ce0471319caa8fa9",
             "packages": [
                 ".",
                 "xml"
@@ -20,8 +36,8 @@
         },
         {
             "name": "github.com/tdewolff/parse",
-            "branch": "master",
-            "revision": "f5b417179f975c1c22d14d0d99505bf1e5ef28f3",
+            "version": "v2.1.0",
+            "revision": "70d04d8c1ad44f8f9e435a056f276910cb1f29bf",
             "packages": [
                 ".",
                 "xml"

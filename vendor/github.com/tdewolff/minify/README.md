@@ -82,6 +82,7 @@ There is no guarantee for absolute stability, but I take issues and bugs serious
 - minify-v1.0.0 depends on parse-v1.0.0
 - minify-v1.1.0 depends on parse-v1.1.0
 - minify-v2.0.0 depends on parse-v2.0.0
+- minify-v2.1.0 depends on parse-v2.1.0
 - minify-tip will always compile with my other packages on tip
 
 The API differences between v1 and v2 are listed below. If `m := minify.New()` and `w` and `r` are your writer and reader respectfully, then **v1** &#8594; **v2**:
@@ -119,12 +120,13 @@ The HTML5 minifier uses these minifications:
 - strip unrequired tags (`html`, `head`, `body`, ...)
 - strip unrequired end tags (`tr`, `td`, `li`, ... and often `p`)
 - strip default protocols (`http:`, `https:` and `javascript:`)
-- strip comments (except conditional comments)
+- strip all comments (including conditional comments, old IE versions are not supported anymore by Microsoft)
 - shorten `doctype` and `meta` charset
 - lowercase tags, attributes and some values to enhance gzip compression
 
 Options:
 
+- `KeepConditionalComments` preserve all IE conditional comments such as `<!--[if IE 6]><![endif]-->` and `<![if IE 6]><![endif]>`, see https://msdn.microsoft.com/en-us/library/ms537512(v=vs.85).aspx#syntax
 - `KeepDefaultAttrVals` preserve default attribute values such as `<script type="text/javascript">`
 - `KeepDocumentTags` preserve `html`, `head` and `body` tags
 - `KeepEndTags` preserve all end tags
