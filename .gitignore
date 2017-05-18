@@ -25,6 +25,7 @@ _testmain.go
 
 .idea
 .DS_Store
+.vscode
 hooker
 example
 !example/.gitkeep

@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/getsentry/raven-go"
 )
 
 func main() {
@@ -20,7 +22,7 @@ func main() {
 	dir := flag.String("dir", cwd, "Directory we should look for a new files")
 	out := flag.String("out", cwd, "Directory we should place zip files into")
 	separator := flag.String("sep", ",", "Pattern separator")
-	patterns := flag.String("patterns", ".xml; .xlsx", fmt.Sprintf("Patterns we look files in directory (seperated by: %s)", *separator))
+	patterns := flag.String("patterns", ".xml, .xlsx", fmt.Sprintf("Patterns we look files in directory (seperated by: %s)", *separator))
 	timeout := flag.Int("timeout", 180, "Timeout waiting request from API")
 	verbose := flag.Bool("v", false, "Verbose output")
 	checkInterval := flag.Int("check", 180, "Interval in seconds of file check")
@@ -28,6 +30,8 @@ func main() {
 	token := flag.String("token", "", "Auth token for API")
 	zipFile := flag.Bool("zip", true, "Zip file")
 	clear := flag.Bool("clear", true, "Clear file after send")
+	sentry := flag.String("sentry", "", "Sentry DSN")
+
 	flag.Parse()
 
 	// Printing header
@@ -47,6 +51,18 @@ func main() {
 		zip:           *zipFile,
 		clear:         *clear,
 		separator:     *separator,
+		sentry:        *sentry,
+	}
+
+	if opts.sentry != "" {
+		raven.SetDSN(opts.sentry)
+		raven.SetTagsContext(map[string]string{
+			"dir":     opts.dir,
+			"pattern": opts.patterns,
+			"url":     opts.url,
+		})
+	} else {
+		fmt.Println("** WARNING: You currently have disabled Sentry **")
 	}
 
 	if opts.token == "" {
@@ -65,6 +81,11 @@ func main() {
 	fmt.Printf("  Clear:\t%t\n", opts.clear)
 	fmt.Printf("  Zip:\t\t%t\n", opts.zip)
 	fmt.Printf("  Verbose:\t%t\n", opts.verbose)
+	if opts.sentry == "" {
+		fmt.Println("  Sentry:\tDISABLED")
+	} else {
+		fmt.Printf("  Sentry:\t%s\n", opts.sentry)
+	}
 	fmt.Println("====================================================================")
 
 	c := newController(opts)
@@ -75,6 +96,10 @@ func main() {
 
 		files, err := ioutil.ReadDir(opts.dir)
 		if err != nil {
+			raven.CaptureErrorAndWait(err, nil, SentryInterface{
+				"directory": opts.dir,
+			})
+
 			log.Fatalf("Directory traverse error: %s\n", err)
 		}
 

@@ -16,6 +16,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/getsentry/raven-go"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
 )
@@ -46,17 +47,30 @@ func (p *parser) parse() {
 	// Checking that file have good size
 	err := p.finishedUpload(filePath)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil, SentryInterface{
+			"path": filePath,
+		})
+
 		log.Fatalf("[FILE: %s] File size checking error: %s\n", p.prefix, err)
 	}
 
 	// Sending stuff and deleting file
 	buf, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{
+			"path": filePath,
+		})
+
 		log.Fatalf("[FILE: %s] Reading file error: %s\n", p.prefix, err)
 	}
 
 	err = p.sendWithBackoff(buf, p.file.Name())
 	if err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{
+			"error": err.Error(),
+			"file":  p.prefix,
+		})
+
 		log.Fatalf("[FILE: %s] Error sending to API: %s\n", p.prefix, err)
 	}
 
@@ -68,6 +82,11 @@ func (p *parser) parse() {
 
 		err := p.zipit(p.file.Name(), zipname, buf)
 		if err != nil {
+			raven.CaptureErrorAndWait(err, map[string]string{
+				"file":    p.file.Name(),
+				"zipname": zipname,
+			})
+
 			log.Fatalf("[FILE: %s] Error zipping file: %s\n", p.prefix, err)
 		}
 
@@ -78,6 +97,10 @@ func (p *parser) parse() {
 	if p.options.clear || p.options.zip {
 		err = os.Remove(filePath)
 		if err != nil {
+			raven.CaptureErrorAndWait(err, map[string]string{
+				"file": filePath,
+			})
+
 			log.Fatalf("[FILE: %s] Error deleting file: %s\n", p.prefix, err)
 		}
 
@@ -164,6 +187,12 @@ func (p *parser) sendWithBackoff(info []byte, filename string) error {
 		backoff++
 		mul := math.Pow(2, float64(backoff)) // 2 4 16 32 64
 		log.Printf("[FILE: %s] Error sending to API: %s\n", p.prefix, err)
+
+		raven.CaptureMessage("Error sending data to API", map[string]string{
+			"message": err.Error(),
+			"file":    p.prefix,
+		})
+
 		if backoff > 5 {
 			break
 		}
