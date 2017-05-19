@@ -3,6 +3,10 @@ package main
 import (
 	"os"
 	"sync"
+
+	"time"
+
+	"github.com/cryptopay-dev/go-metrics"
 )
 
 type controller struct {
@@ -15,6 +19,18 @@ func newController(opts options) *controller {
 	return &controller{
 		files:   make(map[string]chan struct{}),
 		options: opts,
+	}
+}
+
+func (c *controller) watch() {
+	for {
+		c.mu.Lock()
+		metrics.Send(metrics.M{
+			"files_in_work": len(c.files),
+		})
+		c.mu.Unlock()
+
+		time.Sleep(time.Second * 10)
 	}
 }
 

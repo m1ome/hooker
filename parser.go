@@ -16,6 +16,7 @@ import (
 	"path"
 	"time"
 
+	metrics "github.com/cryptopay-dev/go-metrics"
 	"github.com/getsentry/raven-go"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
@@ -47,7 +48,7 @@ func (p *parser) parse() {
 	// Checking that file have good size
 	err := p.finishedUpload(filePath)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil, SentryInterface{
+		raven.CaptureErrorAndWait(err, map[string]string{
 			"path": filePath,
 		})
 
@@ -181,6 +182,10 @@ func (p *parser) sendWithBackoff(info []byte, filename string) error {
 
 		err := p.post(info, filename)
 		if err == nil {
+			metrics.Send(metrics.M{
+				"sent": 1,
+			})
+
 			return nil
 		}
 

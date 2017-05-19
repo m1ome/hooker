@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cryptopay-dev/go-metrics"
 	"github.com/getsentry/raven-go"
 )
 
@@ -69,6 +70,13 @@ func main() {
 		fmt.Println("** WARNING: You providen empty token! **")
 	}
 
+	// Enable metrics
+	if err := metrics.Setup(os.Getenv("METRICS_URL")); err == nil {
+		go metrics.Watch(10000)
+	} else {
+		log.Fatalf("Metrcis setup error: %s\n", err.Error())
+	}
+
 	fmt.Println("====================================================================")
 	fmt.Println("Configuration:")
 	fmt.Printf("  Interval:\t%d seconds\n", opts.interval)
@@ -89,6 +97,8 @@ func main() {
 	fmt.Println("====================================================================")
 
 	c := newController(opts)
+	go c.watch()
+
 	for {
 		if opts.verbose {
 			log.Println("Scanning directory for a new files")
@@ -96,7 +106,7 @@ func main() {
 
 		files, err := ioutil.ReadDir(opts.dir)
 		if err != nil {
-			raven.CaptureErrorAndWait(err, nil, SentryInterface{
+			raven.CaptureErrorAndWait(err, map[string]string{
 				"directory": opts.dir,
 			})
 
@@ -125,6 +135,9 @@ func main() {
 
 				if !goodFile {
 					if opts.verbose {
+						metrics.SendAndWait(metrics.M{
+							"skipped": 1,
+						})
 						log.Printf("File %s is not accepted by system\n", file.Name())
 					}
 					continue
