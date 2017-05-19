@@ -83,7 +83,7 @@ func (c *controller) serve() {
 		w.Write(data)
 	})
 
-	http.ListenAndServe(":9090", nil)
+	http.ListenAndServe(c.options.listen, nil)
 }
 
 func (c *controller) spawn(file os.FileInfo) {

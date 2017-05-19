@@ -31,6 +31,7 @@ func main() {
 	token := flag.String("token", "", "Auth token for API")
 	zipFile := flag.Bool("zip", true, "Zip file")
 	clear := flag.Bool("clear", true, "Clear file after send")
+	listen := flag.String("listen", ":8080", "Server listen address")
 
 	flag.Parse()
 
@@ -51,6 +52,7 @@ func main() {
 		zip:           *zipFile,
 		clear:         *clear,
 		separator:     *separator,
+		listen:        *listen,
 	}
 
 	sentry := os.Getenv("SENTRY_DSN")
@@ -88,6 +90,7 @@ func main() {
 	fmt.Printf("  Clear:\t%t\n", opts.clear)
 	fmt.Printf("  Zip:\t\t%t\n", opts.zip)
 	fmt.Printf("  Verbose:\t%t\n", opts.verbose)
+	fmt.Printf("  Listen:\t%s\n", opts.listen)
 	fmt.Println("====================================================================")
 
 	c := newController(opts)
