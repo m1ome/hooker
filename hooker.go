@@ -92,6 +92,7 @@ func main() {
 
 	c := newController(opts)
 	go c.watch()
+	go c.serve()
 
 	for {
 		if opts.verbose {
@@ -106,6 +107,7 @@ func main() {
 
 			log.Fatalf("Directory traverse error: %s\n", err)
 		}
+		c.setDirectoryListing(files)
 
 		if len(files) > 0 {
 			for _, file := range files {
@@ -147,4 +149,5 @@ func main() {
 
 		time.Sleep(time.Second * time.Duration(opts.interval))
 	}
+
 }

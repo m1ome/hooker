@@ -46,3 +46,19 @@ X-Access-Token: <TOKEN_HERE>
 X-File-Name: GPS-CPSbalexp20170325.xml
 Content-Encoding: gzip
 ```
+
+## Information request [GET]
+## Path: `/`
+## Response: 
+```json
+{
+    "dir_files":[
+        ".DS_Store",
+        ".gitkeep",
+        "GPS-CPSbalexp20170316 3.xml"
+    ],
+    "working_files":[
+        "GPS-CPSbalexp20170316 3.xml"
+    ]
+}
+```
