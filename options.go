@@ -13,5 +13,4 @@ type options struct {
 	zip           bool
 	clear         bool
 	separator     string
-	sentry        string
 }
