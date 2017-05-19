@@ -189,6 +189,10 @@ func (p *parser) sendWithBackoff(info []byte, filename string) error {
 			return nil
 		}
 
+		metrics.Send(metrics.M{
+			"sending_failure": 1,
+		})
+
 		backoff++
 		mul := math.Pow(2, float64(backoff)) // 2 4 16 32 64
 		log.Printf("[FILE: %s] Error sending to API: %s\n", p.prefix, err)
