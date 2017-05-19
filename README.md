@@ -16,13 +16,15 @@ Usage of hooker:
   -clear
         Clear file after send (default true)
   -dir string
-        Directory we should look for a new files (default "(CWD)")
+        Directory we should look for a new files (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
   -interval int
         Time in seconds to sleep between checks (default 60)
+  -listen string
+        Server listen address (default ":8080")
   -out string
-        Directory we should place zip files into (default "(CWD)")
+        Directory we should place zip files into (default "/Users/w1n2k/Work/Golang/src/github.com/m1ome/hooker")
   -patterns string
-        Patterns we look files in directory (seperated by: ,) (default ".xml; .xlsx")
+        Patterns we look files in directory (seperated by: ,) (default ".xml, .xlsx")
   -sep string
         Pattern separator (default ",")
   -timeout int
