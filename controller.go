@@ -28,9 +28,9 @@ func newController(opts options) *controller {
 func (c *controller) watch() {
 	for {
 		c.mu.Lock()
-		metrics.Send(metrics.M{
-			"files_in_work": len(c.files),
-		})
+		metrics.Send("files", metrics.M{
+			"in_work": len(c.files),
+		}, nil)
 		c.mu.Unlock()
 
 		time.Sleep(time.Second * 10)

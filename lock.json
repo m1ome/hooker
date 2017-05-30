@@ -1,5 +1,5 @@
 {
-    "memo": "2a3af045292e587ec032a038139364b0c4ee78b648db3859e8f8978c03497074",
+    "memo": "a9b56d9743cd7da63e77d8e3fc44e7445c83fa7b4edb9cc4b02117acdccfae88",
     "projects": [
         {
             "name": "github.com/certifi/gocertifi",
@@ -10,9 +10,42 @@
             ]
         },
         {
+            "name": "github.com/cryptopay-dev/go-metrics",
+            "branch": "master",
+            "revision": "af29ce64d4286335e818b58442fa08a7b536e968",
+            "packages": [
+                "."
+            ]
+        },
+        {
             "name": "github.com/getsentry/raven-go",
             "branch": "master",
-            "revision": "5c07ee42021d8df0718f06bc7ea6b17123a44f9c",
+            "revision": "4fa2ac0d29f801e79a063c0da82d37b5ff2873b2",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/nats-io/go-nats",
+            "version": "v1.2.2",
+            "revision": "61923ed1eaf8398000991fbbee2ef11ab5a5be0d",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/nats-io/nats",
+            "version": "v1.2.2",
+            "revision": "61923ed1eaf8398000991fbbee2ef11ab5a5be0d",
+            "packages": [
+                "encoders/builtin",
+                "util"
+            ]
+        },
+        {
+            "name": "github.com/nats-io/nuid",
+            "version": "v1.0.0",
+            "revision": "289cccf02c178dc782430d534e3c1f5b72af807f",
             "packages": [
                 "."
             ]

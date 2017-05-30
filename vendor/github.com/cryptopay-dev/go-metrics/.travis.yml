@@ -1,0 +1,22 @@
+language: go
+
+go: 
+  - 1.8
+
+before_install:
+  - go install -race std
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/nats-io/gnatsd
+  - go get -v ./...
+  - gnatsd&
+
+install:
+  - go get github.com/stretchr/testify/assert
+  - go get github.com/nats-io/go-nats
+
+script:
+  - go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic
+  - go test -v -cover ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

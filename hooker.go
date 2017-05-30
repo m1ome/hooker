@@ -72,8 +72,8 @@ func main() {
 	}
 
 	// Enable metrics
-	if err := metrics.Setup(os.Getenv("METRICS_URL")); err == nil {
-		go metrics.Watch(10000)
+	if err := metrics.Setup(os.Getenv("METRICS_URL"), os.Getenv("METRICS_APPLICATION"), os.Getenv("METRICS_HOSTNAME")); err == nil {
+		go metrics.Watch(time.Second * 10)
 	} else {
 		log.Fatalf("Metrcis setup error: %s\n", err.Error())
 	}
@@ -134,9 +134,9 @@ func main() {
 
 				if !goodFile {
 					if opts.verbose {
-						metrics.SendAndWait(metrics.M{
-							"skipped": 1,
-						})
+						metrics.SendAndWait("files", metrics.M{
+							"skipped": true,
+						}, nil)
 						log.Printf("File %s is not accepted by system\n", file.Name())
 					}
 					continue
